@@ -10,7 +10,9 @@ import ssl
 import time
 import select
 import errno
+import sslkeylog
 
+sslkeylog.set_keylog('SSLKEYLOGFILE')
 # TODO: implement verbose output
 # some code snippets, as well as the original idea, from Black Hat Python
 
@@ -219,7 +221,8 @@ def enable_ssl(args, remote_socket, local_socket):
         sni = name
 
     try:
-        ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+        ctx = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+        ctx.set_ciphers('HIGH')
         ctx.sni_callback = sni_callback
         ctx.load_cert_chain(certfile=args.server_certificate,
                             keyfile=args.server_key,
@@ -242,6 +245,7 @@ def enable_ssl(args, remote_socket, local_socket):
         remote_socket = ctx.wrap_socket(remote_socket,
                                         server_hostname=sni,
                                         )
+        
     except ssl.SSLError as e:
         print("SSL handshake failed for remote socket", str(e))
         raise
@@ -495,3 +499,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
